@@ -1996,12 +1996,12 @@ static struct opt_table opt_config_table[] = {
 			"Tune up mine2 mins 30-9999, default 0=never"),
 #endif
 #ifdef HAVE_LIBCURL
-	OPT_WITH_ARG("--btc-address",
+	OPT_WITH_ARG("--base58-address",
 		     opt_set_charp, NULL, &opt_btc_address,
-		     "Set bitcoin target address when solo mining to bitcoind (mandatory)"),
-	OPT_WITH_ARG("--btc-sig",
+		     "Set base58 target address when solo mining to bitcoind (mandatory)"),
+	OPT_WITH_ARG("--coinbase-message",
 		     opt_set_charp, NULL, &opt_btc_sig,
-		     "Set signature to add to coinbase when solo mining (optional)"),
+		     "Set message to add to coinbase when solo mining (optional)"),
 #endif
 #ifdef HAVE_CURSES
 	OPT_WITHOUT_ARG("--compact",
@@ -3295,25 +3295,6 @@ static bool gbt_solo_decode(struct pool *pool, json_t *res_val)
 		ofs += len;
 	}
 
-	/* Followed by timestamp */
-	cgtime(&now);
-	pool->scriptsig_base[ofs++] = 0xfe; // Encode seconds as u32
-	u32 = (uint32_t *)&pool->scriptsig_base[ofs];
-	*u32 = htole32(now.tv_sec);
-	ofs += 4; // sizeof uint32_t
-	pool->scriptsig_base[ofs++] = 0xfe; // Encode usecs as u32
-	u32 = (uint32_t *)&pool->scriptsig_base[ofs];
-	*u32 = htole32(now.tv_usec);
-	ofs += 4; // sizeof uint32_t
-
-	cg_memcpy(pool->scriptsig_base + ofs, "\x09\x63\x67\x6d\x69\x6e\x65\x72\x34\x32", 10);
-	ofs += 10;
-
-	/* Followed by extranonce size, fixed at 8 */
-	pool->scriptsig_base[ofs++] = 8;
-	pool->nonce2_offset = 41 + ofs;
-	ofs += 8;
-
 	if (opt_btc_sig) {
 		len = strlen(opt_btc_sig);
 		if (len > 32)
@@ -3322,6 +3303,11 @@ static bool gbt_solo_decode(struct pool *pool, json_t *res_val)
 		cg_memcpy(pool->scriptsig_base + ofs, opt_btc_sig, len);
 		ofs += len;
 	}
+
+	/* Followed by extranonce size, fixed at 8 */
+	pool->scriptsig_base[ofs++] = 8;
+	pool->nonce2_offset = 41 + ofs;
+	ofs += 8;
 
 	pool->scriptsig_base[0] = ofs++; // Template length
 	pool->n1_len = ofs;
@@ -7411,22 +7397,8 @@ static bool setup_gbt_solo(CURL *curl, struct pool *pool)
 		}
 		goto out;
 	}
-	snprintf(s, 256, "{\"id\": 1, \"method\": \"validateaddress\", \"params\": [\"%s\"]}\n", opt_btc_address);
-	val = json_rpc_call(curl, pool->rpc_url, pool->rpc_userpass, s, true,
-			    false, &rolltime, pool, false);
-	if (!val)
-		goto out;
-	res_val = json_object_get(val, "result");
-	if (!res_val)
-		goto out;
-	valid_val = json_object_get(res_val, "isvalid");
-	if (!valid_val)
-		goto out;
-	if (!json_is_true(valid_val)) {
-		applog(LOG_ERR, "Bitcoin address %s is NOT valid", opt_btc_address);
-		goto out;
-	}
-	applog(LOG_NOTICE, "Solo mining to valid address: %s", opt_btc_address);
+	applog(LOG_NOTICE, "Address validation is not supported, make sure this is a valid, base58 (legacy) address: %s", opt_btc_address);
+	applog(LOG_NOTICE, "Solo mining to address: %s", opt_btc_address);
 	ret = true;
 	address_to_pubkeyhash(pool->script_pubkey, opt_btc_address);
 	hex2bin(scriptsig_header_bin, scriptsig_header, 41);

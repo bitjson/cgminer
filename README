@@ -41,7 +41,7 @@ cgminer -o stratum+tcp://pool:port -u username -p password
 
 Solo mining to local bitcoind:
 
-cgminer -o http://localhost:8332 -u username -p password --btc-address 1NezumikkTRoCUkGVPAp1TKJnJrYTLvhEz
+cgminer -o http://localhost:8332 -u username -p password --base58-address 1NezumikkTRoCUkGVPAp1TKJnJrYTLvhEz
 
 The list of proxy types are:
  http:    standard http 1.1 proxy
@@ -293,8 +293,8 @@ Options for both config file and command line:
 --bxf-bits <arg>    Set max BXF/HXF bits for overclocking (default: 54)
 --bxf-temp-target <arg> Set target temperature for BXF/HXF devices (default: 82)
 --bxm-bits <arg>    Set BXM bits for overclocking (default: 54)
---btc-address <arg> Set bitcoin target address when solo mining to bitcoind
---btc-sig <arg>     Set signature to add to coinbase when solo mining (optional)
+--base58-address <arg> Set base58 target address when solo mining to bitcoind
+--coinbase-message <arg> Set message to add to coinbase when solo mining (optional)
 --compac-freq <arg> Set GekkoScience Compac frequency in MHz, range 100-500 (default: 150.0)
 --compact           Use compact display without per device statistics
 --debug|-D          Enable debug output
@@ -993,7 +993,7 @@ rpcpassword=password
 Restart bitcoind, then start cgminer, pointing to the bitcoind and choose a
 btc address with the following options, altering to suit their setup:
 
-cgminer -o http://localhost:8332 -u username -p password --btc-address 1NezumikkTRoCUkGVPAp1TKJnJrYTLvhEz
+cgminer -o http://localhost:8332 -u username -p password --base58-address 1NezumikkTRoCUkGVPAp1TKJnJrYTLvhEz
 
 Note the http:// is mandatory for solo mining.
 
